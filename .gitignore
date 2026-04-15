@@ -1,0 +1,14 @@
+# Bỏ qua thư mục dữ liệu và ảnh test
+data/
+*.zip
+*.jpg
+*.png
+*.jpeg
+
+# Bỏ qua trọng số mô hình (File quá nặng)
+*.pth
+*.pt
+
+# Bỏ qua file rác của Python
+__pycache__/
+*.pyc
