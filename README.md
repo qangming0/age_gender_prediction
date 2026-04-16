@@ -3,16 +3,18 @@
 Dự án Computer Vision ứng dụng học sâu (Deep Learning) để dự đoán đồng thời Tuổi và Giới tính của người trong ảnh. Mô hình được xây dựng dựa trên kiến trúc Multi-task Learning với PyTorch, giúp tối ưu hóa tài nguyên và tăng độ chính xác nhờ việc chia sẻ đặc trưng khuôn mặt.
 
 ## 🧠 Kiến trúc Mô hình (Multi-task CNN)
-Thay vì huấn luyện hai mô hình riêng biệt, dự án sử dụng cấu trúc rẽ nhánh (Y-shape):
-* **Backbone:** ResNet-18 (được loại bỏ lớp Fully Connected cuối cùng) đóng vai trò trích xuất đặc trưng khuôn mặt (Shared Features).
-* **Gender Head (Phân loại):** Nhánh dự đoán giới tính sử dụng hàm loss `BCEWithLogitsLoss`. Đầu ra 1 node giải mã bằng hàm Sigmoid với quy ước nhãn thực tế: `1 = Nam`, `0 = Nữ`.
-* **Age Head (Hồi quy):** Nhánh dự đoán tuổi sử dụng hàm loss `MSELoss` để dự đoán trực tiếp một con số tuổi liên tục. Đầu ra 1 node.
+Thay vì tốn tài nguyên huấn luyện hai mô hình riêng biệt, dự án sử dụng cấu trúc mạng học đa nhiệm rẽ nhánh (Y-shape Architecture):
 
-## 📊 Dữ liệu (Dataset)
-Sử dụng bộ dữ liệu [Krishnancool/age-gender-prediction](https://huggingface.co/datasets/Krishnancool/age-gender-prediction) từ Hugging Face.
-* **Tiền xử lý:** Tự động hóa Pipeline với `Custom Dataset` và `DataLoader`.
-* **Augmentation:** Xử lý ảnh về chuẩn `224x224`, áp dụng RandomHorizontalFlip, ColorJitter và chuẩn hóa (Normalize) theo ImageNet để tăng tính robust cho mô hình.
-* **Debug Kỹ thuật:** Đã xử lý triệt để lỗi "Flipped Label" (ngược nhãn) thường gặp trong các bộ dữ liệu do cộng đồng đóng góp.
+* **Backbone (Shared Representation):** Sử dụng Pre-trained `ResNet-18` (đã cắt bỏ lớp Fully Connected cuối cùng) làm màng lọc cốt lõi để trích xuất các đặc trưng chung của khuôn mặt (đường nét, nếp nhăn, cấu trúc xương).
+* **Gender Head (Phân loại nhị phân):** Nhánh dự đoán giới tính bao gồm các lớp Linear kết hợp `Dropout(0.4)` để chống học vẹt. Tối ưu hóa bằng hàm `BCEWithLogitsLoss`. Đầu ra 1 node được giải mã bằng hàm Sigmoid với quy ước: `1 = Nam`, `0 = Nữ`.
+* **Age Head (Hồi quy tuyến tính):** Nhánh dự đoán tuổi cấu trúc tương tự (Linear + `Dropout(0.4)`) nhưng tối ưu hóa bằng hàm `MSELoss` để dự đoán trực tiếp một con số tuổi liên tục. Đầu ra 1 node.
+  
+## 🗂️ Dữ liệu (Dataset & Pipeline)
+Mô hình được huấn luyện trên tập dữ liệu `Krishnancool/age-gender-prediction` (Hugging Face) và sử dụng bộ [UTKFace](https://www.kaggle.com/datasets/jangedoo/utkface-new) từ Kaggle làm tập Test độc lập để đánh giá tính tổng quát hóa.
+
+* **Tiền xử lý (Preprocessing):** Tự động hóa luồng nạp dữ liệu với `Custom Dataset` và `DataLoader` của PyTorch. Quản lý việc chia tập Train/Validation (tỷ lệ 80/20) để theo dõi quá trình hội tụ.
+* **Tăng cường dữ liệu (Data Augmentation):** Resize ảnh về chuẩn `224x224`. Áp dụng các phép biến đổi không gian và màu sắc (`RandomHorizontalFlip`, `RandomRotation(15°)`, `ColorJitter`, `RandomResizedCrop`) trực tiếp trên thanh RAM lúc huấn luyện, kết hợp chuẩn hóa (Normalize) theo ImageNet để tăng tính robust cho mô hình khi gặp dữ liệu nhiễu.
+* **Debug Kỹ thuật:** Xử lý triệt để lỗi "Label Mismatch" (Ngược nhãn Giới tính) khi cross-validate giữa các bộ dữ liệu do cộng đồng đóng góp bằng logic đảo nhãn động (`gender = 1 - utk_gender`).
 
 ## 🚀 Cài đặt và Sử dụng
 
